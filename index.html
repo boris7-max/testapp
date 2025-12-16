@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мультитул</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Система входа по ключу -->
+    <div id="key-system" class="key-system-overlay">
+        <div class="key-card">
+            <div class="key-header">
+                <i class="fas fa-key"></i>
+                <h2>Доступ к BROWN-LINK</h2>
+            </div>
+            <p class="key-description">Введите ключ для доступа к программе</p>
+            
+            <div class="key-input-wrapper">
+                <input type="password" id="key-input" placeholder="Введите ключ доступа" class="key-input">
+                <button class="key-show-btn" id="show-key-btn" type="button">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+            
+            <button class="btn btn-purple" id="submit-key-btn">
+                <i class="fas fa-unlock"></i> Разблокировать доступ
+            </button>
+            
+            <div class="key-hint">
+                <i class="fas fa-info-circle"></i>
+                <span>Для получения ключа обратитесь к @kazay_new или @brown_tme</span>
+            </div>
+            
+            <div class="key-attempts">
+                <p id="attempts-counter">Попыток осталось: <span>3</span></p>
+                <div class="attempts-bar">
+                    <div class="attempts-progress" id="attempts-progress"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Прелоадер при загрузке сайта -->
+    <div id="site-loader" class="site-loader-overlay hidden">
+        <div class="loader-card">
+            <div class="loader-animation">
+                <!-- From Uiverse.io by JaydipPrajapati1910 -->
+                <div class="loader">
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                </div>
+            </div>
+            <h3>Загрузка Скам Ссылки...</h3>
+            <p class="loader-subtitle">Инициализация систем</p>
+            <div class="loader-steps">
+                <div class="step active">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>Проверка Программы</span>
+                </div>
+                <div class="step">
+                    <i class="fas fa-spinner"></i>
+                    <span>Подключение серверов</span>
+                </div>
+                <div class="step">
+                    <i class="fas fa-spinner"></i>
+                    <span>Подключение программы</span>
+                </div>
+                <div class="step">
+                    <i class="fas fa-spinner"></i>
+                    <span>Синхронизация с АПК</span>
+                </div>
+            </div>
+            <div class="loader-progress">
+                <div class="progress-bar" id="site-progress"></div>
+            </div>
+            <p class="loader-timer" id="site-loader-timer">0%</p>
+        </div>
+    </div>
+
+    <div class="container" id="main-content" style="display: none;">
+        <!-- Контент -->
+        <main class="content">
+            <!-- Страница Standoff -->
+            <section id="standoff-page" class="page active">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-gamepad"></i>
+                        <h2>Standoff 2</h2>
+                    </div>
+                    <p class="card-description">Инжект токенов в игру</p>
+                    <input type="text" id="standoff-text" placeholder="Введите токен (обязательно)" class="input">
+                    <button class="btn btn-orange" id="standoff-btn">
+                        <i class="fas fa-play"></i> Инжект токена
+                    </button>
+                </div>
+            </section>
+
+            <!-- Страница Ссылки -->
+            <section id="links-page" class="page">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-link"></i>
+                        <h2>Фейковые ссылки</h2>
+                    </div>
+                    <p class="card-description">Генератор ссылок для скама</p>
+                    <select id="platform-select" class="select">
+                        <option value="youtube">YouTube</option>
+                        <option value="telegram">Telegram</option>
+                        <option value="instagram">Instagram</option>
+                        <option value="tiktok">TikTok</option>
+                    </select>
+                    <button class="btn btn-purple" id="generate-link-btn">
+                        <i class="fas fa-magic"></i> Сгенерировать ссылку
+                    </button>
+                    <div id="link-result" class="result hidden">
+                        <code id="generated-link"></code>
+                        <button class="btn-copy" id="copy-link-btn">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Страница MD5 -->
+            <section id="md5-page" class="page">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-hashtag"></i>
+                        <h2>Конверт токенов</h2>
+                    </div>
+                    <p class="card-description">Конверт ссылки в токен</p>
+                    <input type="text" id="md5-text" placeholder="Введите ссылку для конверта" class="input">
+                    <button class="btn btn-green" id="generate-md5-btn">
+                        <i class="fas fa-bolt"></i> Сгенерировать токен
+                    </button>
+                    <div id="md5-result" class="result hidden">
+                        <code id="generated-md5"></code>
+                        <button class="btn-copy" id="copy-md5-btn">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Страница История -->
+            <section id="history-page" class="page">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-history"></i>
+                        <h2>История действий</h2>
+                    </div>
+                    <div class="history-controls">
+                        <button class="btn btn-small" id="clear-history-btn">
+                            <i class="fas fa-trash"></i> Очистить историю
+                        </button>
+                        <button class="btn btn-small" id="refresh-history-btn">
+                            <i class="fas fa-sync"></i> Обновить
+                        </button>
+                    </div>
+                    <div id="history-list" class="history-list">
+                        <p class="empty-history">История пуста</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Страница О проекте -->
+            <section id="about-page" class="page">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-info-circle"></i>
+                        <h2>О проекте</h2>
+                    </div>
+                    <div class="about-content">
+                        <div class="license-info">
+                            <div class="license-item">
+                                <span class="license-label">Licence:</span>
+                                <span class="license-value active" id="license-status">Active</span>
+                            </div>
+                            <div class="license-item">
+                                <span class="license-label">Key:</span>
+                                <span class="license-value" id="user-key">XXXX-XXXX-XXXX</span>
+                            </div>
+                            <div class="license-item">
+                                <span class="license-label">Expire</span>
+                                <span class="license-value" id="expire-date">31.12.2025</span>
+                            </div>
+                        </div>
+                        
+                        <p>The best skamlink service in the world provides::</p>
+                        <ul>
+                            <li><i class="fas fa-check"></i> Token-based login for SO2</li>
+                            <li><i class="fas fa-check"></i> Fake link generator</li>
+                            <li><i class="fas fa-check"></i> Link to tokent conversion</li>
+                            <li><i class="fas fa-check"></i> Action history</li>
+                            <li><i class="fas fa-check"></i> Regular updates</li>
+                            <li><i class="fas fa-check"></i> Game version suported : 0.36.1</li>
+                            <li><i class="fas fa-check"></i> Last update : 16.12.2025</li>
+                        </ul>
+                        <p>Creators : @kazay_new & brown_tme</p>
+                        <p>T.ME : @brown_link</p>
+                        <button class="btn btn-small btn-gray" id="logout-btn">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Нижняя навигация -->
+        <nav class="bottom-nav">
+            <button class="nav-btn active" data-page="standoff-page">
+                <i class="fas fa-gamepad"></i>
+                <span>Standoff</span>
+            </button>
+            <button class="nav-btn" data-page="links-page">
+                <i class="fas fa-link"></i>
+                <span>Ссылки</span>
+            </button>
+            <button class="nav-btn" data-page="md5-page">
+                <i class="fas fa-hashtag"></i>
+                <span>Токен</span>
+            </button>
+            <button class="nav-btn" data-page="history-page">
+                <i class="fas fa-history"></i>
+                <span>История</span>
+            </button>
+            <button class="nav-btn" data-page="about-page">
+                <i class="fas fa-info-circle"></i>
+                <span>О нас</span>
+            </button>
+        </nav>
+
+        <!-- Алерт успешного инжекта -->
+        <div id="inject-alert" class="alert-overlay hidden">
+            <div class="alert-card">
+                <div class="alert-header">
+                    <div class="alert-icon success">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h3>Инжект успешен!</h3>
+                </div>
+                <div class="alert-body">
+                    <p></p>
+                    <div class="alert-info">
+                        <div class="info-item">
+                            <span class="info-label">Статус:</span>
+                            <span class="info-value success-text">✓ Активен</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Версия:</span>
+                            <span class="info-value">v0.36.1</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Время:</span>
+                            <span class="info-value" id="inject-time"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert-footer">
+                    <button class="btn btn-purple" id="close-alert-btn">
+                        <i class="fas fa-times"></i> Закрыть
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Уведомления -->
+        <div id="toast" class="toast hidden">
+            <span id="toast-message"></span>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
