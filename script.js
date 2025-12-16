@@ -1,6 +1,5 @@
 // ===== КЛЮЧЕВАЯ СИСТЕМА =====
 const VALID_KEYS = [
-
     "BRAIN-N7P9R1T3V5X7Z9B1D3F5H7"
 ];
 
@@ -13,6 +12,9 @@ let licenseExpireDate = '';
 
 // ===== ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ =====
 document.addEventListener('DOMContentLoaded', function() {
+    // Создаем звездное поле
+    createStarfield();
+    
     // Проверяем сохраненную сессию
     checkSavedSession();
     
@@ -30,6 +32,40 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('logout-btn').addEventListener('click', logout);
     }
 });
+
+// ===== СОЗДАНИЕ ЗВЕЗДНОГО ПОЛЯ =====
+function createStarfield() {
+    const starfield = document.getElementById('starfield');
+    if (!starfield) return;
+    
+    const starCount = 150; // Количество звезд
+    
+    for (let i = 0; i < starCount; i++) {
+        const star = document.createElement('div');
+        
+        // Случайный размер звезды
+        const size = Math.random() * 3 + 1;
+        const starSize = size < 1.5 ? 'small' : size < 2.5 ? 'medium' : 'large';
+        
+        // Случайная позиция
+        const left = Math.random() * 100;
+        const top = Math.random() * 100;
+        
+        // Случайная скорость падения
+        const duration = Math.random() * 10 + 20; // 20-30 секунд
+        const delay = Math.random() * 5; // Задержка
+        
+        // Случайная частота мерцания
+        const twinkleDuration = Math.random() * 2 + 1; // 1-3 секунды
+        
+        star.className = `star ${starSize}`;
+        star.style.left = `${left}%`;
+        star.style.top = `${-10}%`;
+        star.style.animation = `starFall ${duration}s linear ${delay}s infinite, starTwinkle ${twinkleDuration}s ease-in-out ${delay}s infinite`;
+        
+        starfield.appendChild(star);
+    }
+}
 
 // ===== ПРОВЕРКА СОХРАНЕННОЙ СЕССИИ =====
 function checkSavedSession() {
@@ -223,6 +259,7 @@ function logout() {
         // Показываем ключевую систему
         document.getElementById('key-system').style.display = 'flex';
         document.getElementById('main-content').style.display = 'none';
+        document.getElementById('site-loader').style.display = 'none';
         
         // Сбрасываем поля
         const keyInput = document.getElementById('key-input');
@@ -345,14 +382,37 @@ function initMainApp() {
             navButtons.forEach(btn => btn.classList.remove('active'));
             this.classList.add('active');
             
-            pages.forEach(page => page.classList.remove('active'));
-            document.getElementById(pageId).classList.add('active');
+            pages.forEach(page => {
+                page.classList.remove('active');
+                page.style.opacity = '0';
+                page.style.transform = 'translateY(20px)';
+            });
+            
+            const activePage = document.getElementById(pageId);
+            activePage.classList.add('active');
+            
+            // Анимация появления страницы
+            setTimeout(() => {
+                activePage.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                activePage.style.opacity = '1';
+                activePage.style.transform = 'translateY(0)';
+            }, 50);
             
             if (pageId === 'history-page') {
                 loadHistory();
             }
         });
     });
+    
+    // Анимация появления первой страницы
+    const firstPage = document.querySelector('.page.active');
+    if (firstPage) {
+        setTimeout(() => {
+            firstPage.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+            firstPage.style.opacity = '1';
+            firstPage.style.transform = 'translateY(0)';
+        }, 300);
+    }
     
     // Загружаем историю
     loadHistory();
