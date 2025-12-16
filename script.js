@@ -10,10 +10,69 @@ let currentUserKey = '';
 let history = JSON.parse(localStorage.getItem('multitool_history') || '[]');
 let licenseExpireDate = '';
 
+// ===== СОЗДАНИЕ ЗВЕЗДНОГО ПОЛЯ =====
+function createStarfield() {
+    const starfield = document.getElementById('starfield');
+    if (!starfield) return;
+    
+    const starCount = 80; // Меньше звезд для легкого эффекта
+    
+    // Очищаем старые звезды (если есть)
+    starfield.innerHTML = '';
+    
+    for (let i = 0; i < starCount; i++) {
+        const star = document.createElement('div');
+        
+        // Случайный размер звезды (все маленькие)
+        const size = Math.random();
+        let starSize, starWidth;
+        
+        if (size < 0.7) {
+            starSize = 'small';
+            starWidth = 1;
+        } else if (size < 0.9) {
+            starSize = 'medium';
+            starWidth = 1.5;
+        } else {
+            starSize = 'large';
+            starWidth = 2;
+        }
+        
+        // Случайная позиция
+        const left = Math.random() * 100;
+        const startTop = Math.random() * 100;
+        
+        // Случайная скорость падения (очень медленно)
+        const duration = Math.random() * 20 + 40; // 40-60 секунд
+        const delay = Math.random() * 15; // Большая задержка
+        
+        // Случайная частота мерцания
+        const twinkleDuration = Math.random() * 4 + 3; // 3-7 секунд
+        
+        // Случайное направление падения
+        const direction = Math.random() * 8 - 4; // -4px до +4px
+        
+        star.className = `star ${starSize}`;
+        star.style.left = `${left}%`;
+        star.style.top = `${startTop}%`;
+        star.style.width = `${starWidth}px`;
+        star.style.height = `${starWidth}px`;
+        star.style.setProperty('--direction', `${direction}px`);
+        star.style.animation = `starFall ${duration}s linear ${delay}s infinite, starTwinkle ${twinkleDuration}s ease-in-out ${delay}s infinite`;
+        
+        starfield.appendChild(star);
+    }
+}
+
 // ===== ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ =====
 document.addEventListener('DOMContentLoaded', function() {
     // Создаем звездное поле
     createStarfield();
+    
+    // Обновляем звезды каждую минуту для разнообразия
+    setInterval(() => {
+        createStarfield();
+    }, 60000);
     
     // Проверяем сохраненную сессию
     checkSavedSession();
@@ -32,40 +91,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('logout-btn').addEventListener('click', logout);
     }
 });
-
-// ===== СОЗДАНИЕ ЗВЕЗДНОГО ПОЛЯ =====
-function createStarfield() {
-    const starfield = document.getElementById('starfield');
-    if (!starfield) return;
-    
-    const starCount = 150; // Количество звезд
-    
-    for (let i = 0; i < starCount; i++) {
-        const star = document.createElement('div');
-        
-        // Случайный размер звезды
-        const size = Math.random() * 3 + 1;
-        const starSize = size < 1.5 ? 'small' : size < 2.5 ? 'medium' : 'large';
-        
-        // Случайная позиция
-        const left = Math.random() * 100;
-        const top = Math.random() * 100;
-        
-        // Случайная скорость падения
-        const duration = Math.random() * 10 + 20; // 20-30 секунд
-        const delay = Math.random() * 5; // Задержка
-        
-        // Случайная частота мерцания
-        const twinkleDuration = Math.random() * 2 + 1; // 1-3 секунды
-        
-        star.className = `star ${starSize}`;
-        star.style.left = `${left}%`;
-        star.style.top = `${-10}%`;
-        star.style.animation = `starFall ${duration}s linear ${delay}s infinite, starTwinkle ${twinkleDuration}s ease-in-out ${delay}s infinite`;
-        
-        starfield.appendChild(star);
-    }
-}
 
 // ===== ПРОВЕРКА СОХРАНЕННОЙ СЕССИИ =====
 function checkSavedSession() {
@@ -382,37 +407,14 @@ function initMainApp() {
             navButtons.forEach(btn => btn.classList.remove('active'));
             this.classList.add('active');
             
-            pages.forEach(page => {
-                page.classList.remove('active');
-                page.style.opacity = '0';
-                page.style.transform = 'translateY(20px)';
-            });
-            
-            const activePage = document.getElementById(pageId);
-            activePage.classList.add('active');
-            
-            // Анимация появления страницы
-            setTimeout(() => {
-                activePage.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-                activePage.style.opacity = '1';
-                activePage.style.transform = 'translateY(0)';
-            }, 50);
+            pages.forEach(page => page.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
             
             if (pageId === 'history-page') {
                 loadHistory();
             }
         });
     });
-    
-    // Анимация появления первой страницы
-    const firstPage = document.querySelector('.page.active');
-    if (firstPage) {
-        setTimeout(() => {
-            firstPage.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
-            firstPage.style.opacity = '1';
-            firstPage.style.transform = 'translateY(0)';
-        }, 300);
-    }
     
     // Загружаем историю
     loadHistory();
