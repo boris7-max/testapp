@@ -1,26 +1,29 @@
-// ===== КЛЮЧЕВАЯ СИСТЕМА =====
-const VALID_KEYS = [
-    "BRAIN-N7P9R1T3V5X7Z9B1D3F5H7"
+// ===== БЕЛЫЙ СПИСОК УСТРОЙСТВ =====
+// Добавляй сюда Device ID разрешенных устройств
+const DEVICE_WHITELIST = [
+    "BROWN-A1B2-C3D4",  // Пример устройства 1
+    "BROWN-E5F6-G7H8",  // Пример устройства 2
+    "BROWN-I9J0-K1L2"   // Пример устройства 3
 ];
-const VALID_LICENSE_DURATION = 7; // дней
 
 // ===== ПЕРЕМЕННЫЕ =====
-let attempts = 3;
 let isAuthenticated = false;
-let currentUserKey = '';
 let history = JSON.parse(localStorage.getItem('multitool_history') || '[]');
-let licenseExpireDate = '';
+let deviceId = '';
 
 // ===== ГЕНЕРАЦИЯ ID УСТРОЙСТВА =====
 function generateDeviceId() {
+    // Создаем уникальный ID на основе характеристик устройства
     const components = [
         navigator.userAgent,
         navigator.platform,
         navigator.language,
         screen.width + 'x' + screen.height,
-        navigator.hardwareConcurrency || 'unknown'
+        navigator.hardwareConcurrency || 'unknown',
+        new Date().getTimezoneOffset()
     ];
     
+    // Хэш функция
     let hash = 0;
     const str = components.join('|');
     for (let i = 0; i < str.length; i++) {
@@ -29,73 +32,123 @@ function generateDeviceId() {
         hash = hash & hash;
     }
     
-    return 'DEV-' + Math.abs(hash).toString(36).toUpperCase().substring(0, 8);
+    // Формат: BROWN-XXXX-XXXX
+    const base36 = Math.abs(hash).toString(36).toUpperCase();
+    const part1 = base36.substring(0, 4).padStart(4, '0');
+    const part2 = base36.substring(4, 8).padStart(4, '0');
+    
+    return `BROWN-${part1}-${part2}`;
 }
 
-// ===== ПРОВЕРКА ЛИЦЕНЗИИ =====
-function checkLicense(key, deviceId) {
-    if (!VALID_KEYS.includes(key)) {
-        return { valid: false, reason: 'invalid_key' };
+// ===== ПОЛУЧЕНИЕ ИЛИ СОЗДАНИЕ DEVICE ID =====
+function getOrCreateDeviceId() {
+    let id = localStorage.getItem('device_id');
+    if (!id) {
+        id = generateDeviceId();
+        localStorage.setItem('device_id', id);
+    }
+    return id;
+}
+
+// ===== ПРОВЕРКА В БЕЛОМ СПИСКЕ =====
+function checkWhitelist() {
+    deviceId = getOrCreateDeviceId();
+    
+    // Проверяем, есть ли устройство в белом списке
+    const isWhitelisted = DEVICE_WHITELIST.includes(deviceId);
+    
+    // Обновляем UI
+    updateActivationUI(isWhitelisted);
+    
+    return isWhitelisted;
+}
+
+// ===== ОБНОВЛЕНИЕ UI АКТИВАЦИИ =====
+function updateActivationUI(isWhitelisted) {
+    const deviceIdDisplay = document.getElementById('device-id-display');
+    const licenseStatus = document.getElementById('license-status');
+    const expireDateElement = document.getElementById('expire-date');
+    const successMessage = document.getElementById('success-message');
+    const errorMessage = document.getElementById('error-message');
+    const activationResult = document.getElementById('activation-result');
+    
+    if (deviceIdDisplay) {
+        deviceIdDisplay.textContent = deviceId;
     }
     
-    const savedLicense = localStorage.getItem(`license_${key}`);
-    if (!savedLicense) {
-        return { valid: true, isNew: true };
+    if (licenseStatus) {
+        if (isWhitelisted) {
+            licenseStatus.textContent = 'В белом списке ✓';
+            licenseStatus.className = 'license-value active';
+            licenseStatus.style.color = '#10b981';
+        } else {
+            licenseStatus.textContent = 'Не в списке ✗';
+            licenseStatus.className = 'license-value';
+            licenseStatus.style.color = '#ef4444';
+        }
     }
     
-    try {
-        const license = JSON.parse(savedLicense);
-        const now = new Date();
-        const expireDate = new Date(license.expire);
+    if (expireDateElement) {
+        expireDateElement.textContent = isWhitelisted ? 'Бессрочно' : '-';
+    }
+    
+    if (activationResult) {
+        activationResult.style.display = 'block';
+    }
+    
+    if (successMessage) {
+        successMessage.style.display = isWhitelisted ? 'flex' : 'none';
+    }
+    
+    if (errorMessage) {
+        errorMessage.style.display = isWhitelisted ? 'none' : 'flex';
+    }
+    
+    // Показываем/скрываем кнопки в зависимости от статуса
+    const copyBtn = document.getElementById('copy-device-id-btn');
+    const telegramBtn = document.getElementById('telegram-contact-btn');
+    const retryBtn = document.getElementById('retry-check-btn');
+    
+    if (copyBtn) copyBtn.style.display = isWhitelisted ? 'none' : 'block';
+    if (telegramBtn) telegramBtn.style.display = isWhitelisted ? 'none' : 'block';
+    if (retryBtn) retryBtn.style.display = isWhitelisted ? 'block' : 'none';
+}
+
+// ===== ОБНОВЛЕНИЕ ИНФОРМАЦИИ В ОСНОВНОМ ИНТЕРФЕЙСЕ =====
+function updateLicenseInfo() {
+    if (deviceId) {
+        const isWhitelisted = DEVICE_WHITELIST.includes(deviceId);
         
-        if (now > expireDate) {
-            return { valid: false, reason: 'expired' };
-        }
-        
-        if (license.deviceId && license.deviceId !== deviceId) {
-            return { valid: false, reason: 'device_mismatch' };
-        }
-        
-        return { 
-            valid: true, 
-            isNew: false,
-            expire: license.expire,
-            deviceId: license.deviceId
+        // Обновляем элементы
+        const elements = {
+            'user-device-id': deviceId,
+            'user-license-status': isWhitelisted ? 'В белом списке ✓' : 'Не в списке ✗',
+            'user-expire-date': 'Бессрочно',
+            'user-added-date': new Date().toLocaleDateString('ru-RU', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            })
         };
         
-    } catch (e) {
-        return { valid: false, reason: 'corrupted' };
-    }
-}
-
-// ===== АКТИВАЦИЯ ЛИЦЕНЗИИ =====
-function activateLicense(key, deviceId) {
-    const expireDate = new Date();
-    expireDate.setDate(expireDate.getDate() + VALID_LICENSE_DURATION);
-    
-    const license = {
-        key: key,
-        deviceId: deviceId,
-        activateDate: new Date().toISOString(),
-        expire: expireDate.toISOString(),
-        deviceInfo: {
-            userAgent: navigator.userAgent.substring(0, 100),
-            platform: navigator.platform,
-            screen: `${screen.width}x${screen.height}`
+        for (const [id, value] of Object.entries(elements)) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = value;
+                
+                // Подсветка статуса
+                if (id === 'user-license-status') {
+                    if (isWhitelisted) {
+                        element.className = 'license-value active';
+                        element.style.color = '#10b981';
+                    } else {
+                        element.className = 'license-value';
+                        element.style.color = '#ef4444';
+                    }
+                }
+            }
         }
-    };
-    
-    localStorage.setItem(`license_${key}`, JSON.stringify(license));
-    return license;
-}
-
-// ===== ОЧИСТКА СЕССИИ =====
-function clearSession() {
-    localStorage.removeItem('multitool_key');
-    localStorage.removeItem('multitool_expire');
-    isAuthenticated = false;
-    currentUserKey = '';
-    attempts = 3;
+    }
 }
 
 // ===== СОЗДАНИЕ ЗВЕЗДНОГО ПОЛЯ =====
@@ -141,254 +194,84 @@ function createStarfield() {
     }
 }
 
-// ===== ПРОВЕРКА СОХРАНЕННОЙ СЕССИИ =====
-function checkSavedSession() {
-    const savedKey = localStorage.getItem('multitool_key');
-    const savedExpire = localStorage.getItem('multitool_expire');
+// ===== ИНИЦИАЛИЗАЦИЯ =====
+function init() {
+    createStarfield();
     
-    if (savedKey && savedExpire) {
-        let deviceId = localStorage.getItem('device_id');
-        if (!deviceId) {
-            deviceId = generateDeviceId();
-            localStorage.setItem('device_id', deviceId);
-        }
-        
-        const licenseCheck = checkLicense(savedKey, deviceId);
-        
-        if (licenseCheck.valid) {
-            currentUserKey = savedKey;
-            licenseExpireDate = licenseCheck.expire || savedExpire;
-            isAuthenticated = true;
-            
-            document.getElementById('key-system').style.display = 'none';
-            startSiteLoader();
-        } else {
-            clearSession();
-            updateAttemptsUI();
-            
-            let reason = '';
-            switch(licenseCheck.reason) {
-                case 'expired': reason = 'Лицензия истекла'; break;
-                case 'device_mismatch': reason = 'Используется на другом устройстве'; break;
-                default: reason = 'Необходима повторная активация';
-            }
-            
-            showMessage(reason, 'warning');
-        }
-    } else {
-        updateAttemptsUI();
-    }
-}
-
-// ===== ПРОВЕРКА КЛЮЧА =====
-function checkKey() {
-    const keyInput = document.getElementById('key-input');
-    const key = keyInput.value.trim().toUpperCase();
+    // Обновляем звезды каждую минуту
+    setInterval(() => {
+        createStarfield();
+    }, 60000);
     
-    removeExistingMessage();
+    // Проверяем белый список
+    const isWhitelisted = checkWhitelist();
     
-    if (!key) {
-        showMessage('Введите ключ!', 'warning');
-        return;
-    }
-    
-    let deviceId = localStorage.getItem('device_id');
-    if (!deviceId) {
-        deviceId = generateDeviceId();
-        localStorage.setItem('device_id', deviceId);
-    }
-    
-    const licenseCheck = checkLicense(key, deviceId);
-    
-    if (licenseCheck.valid) {
-        if (licenseCheck.isNew) {
-            const license = activateLicense(key, deviceId);
-            showMessage('Лицензия активирована на 7 дней!', 'success');
-        } else {
-            const expireDate = new Date(licenseCheck.expire);
-            const daysLeft = Math.ceil((expireDate - new Date()) / (1000 * 60 * 60 * 24));
-            showMessage(`Лицензия активна. Осталось дней: ${daysLeft}`, 'success');
-        }
-        
-        currentUserKey = key;
+    // Если устройство в белом списке, сразу показываем загрузку
+    if (isWhitelisted) {
         isAuthenticated = true;
-        licenseExpireDate = licenseCheck.expire || new Date(Date.now() + VALID_LICENSE_DURATION * 24 * 60 * 60 * 1000).toISOString();
         
-        localStorage.setItem('multitool_key', key);
-        localStorage.setItem('multitool_expire', licenseExpireDate);
-        
-        attempts = 3;
-        updateAttemptsUI();
-        
+        // Задержка для показа статуса
         setTimeout(() => {
-            document.getElementById('key-system').style.display = 'none';
             startSiteLoader();
         }, 1500);
+    }
+    
+    // Назначаем обработчики кнопок
+    document.getElementById('copy-device-id-btn').addEventListener('click', copyDeviceId);
+    document.getElementById('telegram-contact-btn').addEventListener('click', openTelegram);
+    document.getElementById('retry-check-btn').addEventListener('click', retryCheck);
+}
+
+// ===== КОПИРОВАНИЕ DEVICE ID =====
+function copyDeviceId() {
+    navigator.clipboard.writeText(deviceId).then(() => {
+        showToast('Device ID скопирован! Отправьте его администратору.');
+    }).catch(err => {
+        const textarea = document.createElement('textarea');
+        textarea.value = deviceId;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        showToast('Device ID скопирован! Отправьте его администратору.');
+    });
+}
+
+// ===== ОТКРЫТИЕ TELEGRAM =====
+function openTelegram() {
+    const message = `Здравствуйте! Хочу добавить свое устройство в белый список BROWN-LINK.\nМой Device ID: ${deviceId}\nПрошу добавить мое устройство в список разрешенных.`;
+    const encodedMessage = encodeURIComponent(message);
+    window.open(`https://t.me/brown_tme?text=${encodedMessage}`, '_blank');
+    showToast('Telegram открыт. Отправьте сообщение администратору.');
+}
+
+// ===== ПОВТОРНАЯ ПРОВЕРКА =====
+function retryCheck() {
+    const isWhitelisted = checkWhitelist();
+    
+    if (isWhitelisted) {
+        showToast('Устройство найдено в белом списке! Загрузка...');
+        isAuthenticated = true;
         
+        setTimeout(() => {
+            startSiteLoader();
+        }, 1500);
     } else {
-        let errorMessage = '';
-        switch(licenseCheck.reason) {
-            case 'invalid_key':
-                errorMessage = 'Неверный ключ!';
-                break;
-            case 'expired':
-                errorMessage = 'Срок действия лицензии истек!';
-                break;
-            case 'device_mismatch':
-                errorMessage = 'Ключ уже используется на другом устройстве!';
-                break;
-            case 'corrupted':
-                errorMessage = 'Ошибка лицензии. Обратитесь к администратору.';
-                break;
-            default:
-                errorMessage = 'Ошибка активации!';
-        }
-        
-        attempts--;
-        updateAttemptsUI();
-        
-        if (attempts > 0) {
-            showMessage(`${errorMessage} Осталось попыток: ${attempts}`, 'warning');
-            keyInput.value = '';
-            keyInput.focus();
-            
-            keyInput.style.animation = 'shake 0.5s ease';
-            setTimeout(() => {
-                keyInput.style.animation = '';
-            }, 500);
-        } else {
-            showMessage('Доступ заблокирован на 5 минут!', 'warning');
-            document.getElementById('submit-key-btn').disabled = true;
-            document.getElementById('key-input').disabled = true;
-            
-            setTimeout(() => {
-                attempts = 3;
-                document.getElementById('submit-key-btn').disabled = false;
-                document.getElementById('key-input').disabled = false;
-                removeExistingMessage();
-                updateAttemptsUI();
-                showMessage('Доступ восстановлен. Попробуйте снова.', 'success');
-            }, 5 * 60 * 1000);
-        }
-    }
-}
-
-// ===== ПОКАЗАТЬ/СКРЫТЬ КЛЮЧ =====
-function toggleKeyVisibility() {
-    const keyInput = document.getElementById('key-input');
-    const eyeBtn = document.getElementById('show-key-btn');
-    const eyeIcon = eyeBtn.querySelector('i');
-    
-    if (keyInput.type === 'password') {
-        keyInput.type = 'text';
-        eyeIcon.className = 'fas fa-eye-slash';
-    } else {
-        keyInput.type = 'password';
-        eyeIcon.className = 'fas fa-eye';
-    }
-}
-
-// ===== ОБНОВЛЕНИЕ UI ПОПЫТОК =====
-function updateAttemptsUI() {
-    const counter = document.querySelector('#attempts-counter span');
-    const progress = document.getElementById('attempts-progress');
-    
-    if (counter) {
-        counter.textContent = attempts;
-    }
-    
-    if (progress) {
-        progress.style.width = `${(attempts / 3) * 100}%`;
-        
-        if (attempts === 3) {
-            progress.style.background = 'linear-gradient(90deg, #10b981, #8b5cf6)';
-        } else if (attempts === 2) {
-            progress.style.background = 'linear-gradient(90deg, #f59e0b, #f97316)';
-        } else {
-            progress.style.background = 'linear-gradient(90deg, #ef4444, #f97316)';
-        }
-    }
-}
-
-// ===== ПОКАЗАТЬ СООБЩЕНИЕ =====
-function showMessage(text, type) {
-    removeExistingMessage();
-    
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `key-${type}`;
-    
-    const icon = type === 'warning' ? 'fas fa-exclamation-triangle' : 'fas fa-check-circle';
-    messageDiv.innerHTML = `
-        <i class="${icon}"></i>
-        <span>${text}</span>
-    `;
-    
-    const keyAttempts = document.querySelector('.key-attempts');
-    if (keyAttempts) {
-        keyAttempts.parentNode.insertBefore(messageDiv, keyAttempts.nextSibling);
-    }
-}
-
-// ===== УДАЛИТЬ СУЩЕСТВУЮЩЕЕ СООБЩЕНИЕ =====
-function removeExistingMessage() {
-    const existingWarning = document.querySelector('.key-warning');
-    const existingSuccess = document.querySelector('.key-success');
-    
-    if (existingWarning) {
-        existingWarning.remove();
-    }
-    if (existingSuccess) {
-        existingSuccess.remove();
-    }
-}
-
-// ===== ВЫХОД ИЗ СИСТЕМЫ =====
-function logout() {
-    if (confirm('Вы уверены, что хотите выйти? Сессия будет завершена на этом устройстве.')) {
-        const key = localStorage.getItem('multitool_key');
-        if (key) {
-            localStorage.removeItem(`license_${key}`);
-        }
-        
-        clearSession();
-        
-        document.getElementById('key-system').style.display = 'flex';
-        document.getElementById('main-content').style.display = 'none';
-        document.getElementById('site-loader').style.display = 'none';
-        
-        const keyInput = document.getElementById('key-input');
-        if (keyInput) {
-            keyInput.value = '';
-            keyInput.type = 'password';
-        }
-        
-        const showKeyBtn = document.getElementById('show-key-btn');
-        if (showKeyBtn) {
-            showKeyBtn.innerHTML = '<i class="fas fa-eye"></i>';
-        }
-        
-        const submitBtn = document.getElementById('submit-key-btn');
-        if (submitBtn) {
-            submitBtn.disabled = false;
-        }
-        
-        if (keyInput) {
-            keyInput.disabled = false;
-        }
-        
-        updateAttemptsUI();
-        removeExistingMessage();
-        
-        showToast('Вы вышли из системы. Лицензия освобождена.');
+        showToast('Устройство еще не добавлено в белый список.');
     }
 }
 
 // ===== ПРЕЛОАДЕР САЙТА =====
 function startSiteLoader() {
     const loader = document.getElementById('site-loader');
+    const activationSystem = document.getElementById('activation-system');
     const progressBar = document.getElementById('site-progress');
     const timer = document.getElementById('site-loader-timer');
     const mainContent = document.getElementById('main-content');
+    
+    if (activationSystem) {
+        activationSystem.style.display = 'none';
+    }
     
     if (loader) {
         loader.classList.remove('hidden');
@@ -396,8 +279,7 @@ function startSiteLoader() {
     
     let progress = 0;
     const steps = 4;
-    const totalTime = 3500;
-    const stepTime = totalTime / steps;
+    const totalTime = 2000;
     
     function updateSteps(currentStep) {
         const stepElements = document.querySelectorAll('.step');
@@ -458,73 +340,11 @@ function startSiteLoader() {
     }, 100);
 }
 
-// ===== ОБНОВЛЕНИЕ ИНФОРМАЦИИ О ЛИЦЕНЗИИ =====
-function updateLicenseInfo() {
-    if (currentUserKey && licenseExpireDate) {
-        const displayKey = currentUserKey.replace(/(.{4})/g, '$1-').slice(0, -1);
-        const expireDate = new Date(licenseExpireDate);
-        const now = new Date();
-        const daysLeft = Math.ceil((expireDate - now) / (1000 * 60 * 60 * 24));
-        
-        const formattedDate = expireDate.toLocaleDateString('ru-RU', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-        });
-        
-        const deviceId = localStorage.getItem('device_id') || 'Неизвестно';
-        
-        const elements = {
-            'user-key': displayKey,
-            'expire-date': formattedDate,
-            'device-id': deviceId,
-            'days-left': daysLeft > 0 ? daysLeft : 'Истек'
-        };
-        
-        for (const [id, value] of Object.entries(elements)) {
-            const element = document.getElementById(id);
-            if (element) {
-                element.textContent = value;
-                
-                if (id === 'days-left') {
-                    if (daysLeft <= 3) {
-                        element.style.color = '#ef4444';
-                    } else if (daysLeft <= 7) {
-                        element.style.color = '#f59e0b';
-                    } else {
-                        element.style.color = '#10b981';
-                    }
-                }
-            }
-        }
-    }
-}
-
-// ===== ПРОВЕРКА ЛИЦЕНЗИИ В РЕАЛЬНОМ ВРЕМЕНИ =====
-function startLicenseChecker() {
-    setInterval(() => {
-        if (isAuthenticated && licenseExpireDate) {
-            const now = new Date();
-            const expireDate = new Date(licenseExpireDate);
-            
-            if (now > expireDate) {
-                showToast('Лицензия истекла! Перезайдите в систему.');
-                logout();
-            } else {
-                const hoursLeft = Math.ceil((expireDate - now) / (1000 * 60 * 60));
-                if (hoursLeft <= 24) {
-                    showToast(`Лицензия истекает через ${hoursLeft} часов`);
-                }
-            }
-        }
-    }, 30 * 60 * 1000);
-}
-
 // ===== ИНИЦИАЛИЗАЦИЯ ОСНОВНОГО ПРИЛОЖЕНИЯ =====
 function initMainApp() {
     updateLicenseInfo();
-    startLicenseChecker();
     
+    // Навигация
     const navButtons = document.querySelectorAll('.nav-btn');
     const pages = document.querySelectorAll('.page');
     
@@ -544,8 +364,10 @@ function initMainApp() {
         });
     });
     
+    // Загружаем историю
     loadHistory();
     
+    // Назначаем обработчики
     document.getElementById('standoff-btn').addEventListener('click', handleStandoff);
     document.getElementById('generate-link-btn').addEventListener('click', generateLink);
     document.getElementById('copy-link-btn').addEventListener('click', copyLink);
@@ -554,14 +376,32 @@ function initMainApp() {
     document.getElementById('clear-history-btn').addEventListener('click', clearHistory);
     document.getElementById('refresh-history-btn').addEventListener('click', loadHistory);
     document.getElementById('close-alert-btn').addEventListener('click', closeAlert);
+    document.getElementById('manage-device-btn').addEventListener('click', openTelegram);
     
+    // Обработчик выхода
     if (document.getElementById('logout-btn')) {
         document.getElementById('logout-btn').addEventListener('click', logout);
     }
     
+    // Показываем приветственное уведомление
     setTimeout(() => {
-        showToast('Готово к работе!');
+        showToast('Добро пожаловать! Устройство в белом списке.');
     }, 500);
+}
+
+// ===== ВЫХОД ИЗ СИСТЕМЫ =====
+function logout() {
+    if (confirm('Вы уверены, что хотите выйти?')) {
+        isAuthenticated = false;
+        
+        document.getElementById('activation-system').style.display = 'flex';
+        document.getElementById('main-content').style.display = 'none';
+        document.getElementById('site-loader').style.display = 'none';
+        
+        // Обновляем проверку
+        checkWhitelist();
+        showToast('Вы вышли из системы');
+    }
 }
 
 // ===== STANDOFF =====
@@ -821,25 +661,15 @@ function showToast(message) {
     }
 }
 
-// ===== ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ =====
-document.addEventListener('DOMContentLoaded', function() {
-    createStarfield();
-    
-    setInterval(() => {
-        createStarfield();
-    }, 60000);
-    
-    checkSavedSession();
-    
-    document.getElementById('submit-key-btn').addEventListener('click', checkKey);
-    document.getElementById('show-key-btn').addEventListener('click', toggleKeyVisibility);
-    document.getElementById('key-input').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            checkKey();
-        }
-    });
-    
-    if (document.getElementById('logout-btn')) {
-        document.getElementById('logout-btn').addEventListener('click', logout);
-    }
-});
+// ===== ЗАПУСК ПРИ ЗАГРУЗКЕ =====
+document.addEventListener('DOMContentLoaded', init);
+
+// ===== ФУНКЦИИ ДЛЯ АДМИНИСТРАТОРА =====
+// Чтобы добавить устройство в белый список, администратор должен:
+// 1. Получить Device ID от пользователя
+// 2. Добавить его в массив DEVICE_WHITELIST в начале файла
+// 3. Обновить сайт
+
+// Пример как администратор может быстро добавить устройство (в консоли браузера):
+// DEVICE_WHITELIST.push("BROWN-NEW-DEVICE-ID");
+// checkWhitelist(); // Перепроверить
