@@ -11,37 +11,51 @@
     <!-- Фон со звездами -->
     <div id="starfield"></div>
 
-    <!-- Система входа по ключу -->
-    <div id="key-system" class="key-system-overlay">
+    <!-- Система активации -->
+    <div id="activation-system" class="key-system-overlay">
         <div class="key-card">
             <div class="key-header">
-                <i class="fas fa-key"></i>
-                <h2>Доступ к BROWN-LINK</h2>
+                <i class="fas fa-mobile-alt"></i>
+                <h2>Активация устройства</h2>
             </div>
-            <p class="key-description">Введите ключ для доступа к программе</p>
+            <p class="key-description">Для использования программы необходимо активировать ваше устройство</p>
             
-            <div class="key-input-wrapper">
-                <input type="password" id="key-input" placeholder="Введите ключ доступа" class="key-input">
-                <button class="key-show-btn" id="show-key-btn" type="button">
-                    <i class="fas fa-eye"></i>
-                </button>
-            </div>
-            
-            <button class="btn btn-purple" id="submit-key-btn">
-                <i class="fas fa-unlock"></i> Разблокировать доступ
-            </button>
-            
-            <div class="key-hint">
-                <i class="fas fa-info-circle"></i>
-                <span>Для получения ключа обратитесь к @kazay_new или @brown_tme</span>
-            </div>
-            
-            <div class="key-attempts">
-                <p id="attempts-counter">Попыток осталось: <span>3</span></p>
-                <div class="attempts-bar">
-                    <div class="attempts-progress" id="attempts-progress"></div>
+            <div class="license-info" style="margin: 25px 0; padding: 20px;">
+                <div class="license-item">
+                    <span class="license-label">Ваш Device ID:</span>
+                    <span class="license-value" id="device-id-display">Загрузка...</span>
+                </div>
+                <div class="license-item">
+                    <span class="license-label">Статус:</span>
+                    <span class="license-value" id="license-status">Не активирован</span>
+                </div>
+                <div class="license-item">
+                    <span class="license-label">Действителен до:</span>
+                    <span class="license-value" id="expire-date">-</span>
                 </div>
             </div>
+
+            <button class="btn btn-purple" id="copy-device-id-btn" style="margin-bottom: 15px;">
+                <i class="fas fa-copy"></i> Копировать Device ID
+            </button>
+            
+            <button class="btn btn-orange" id="telegram-activation-btn">
+                <i class="fab fa-telegram"></i> Получить активацию в Telegram
+            </button>
+            
+            <div class="key-hint" style="margin-top: 25px;">
+                <i class="fas fa-info-circle"></i>
+                <span>Скопируйте ваш Device ID и отправьте его @brown_tme для активации</span>
+            </div>
+            
+            <div class="key-hint">
+                <i class="fas fa-clock"></i>
+                <span>Активация действительна 30 дней. Стоимость: 500 рублей</span>
+            </div>
+            
+            <button class="btn btn-gray" id="check-activation-btn" style="margin-top: 20px;">
+                <i class="fas fa-sync"></i> Проверить активацию
+            </button>
         </div>
     </div>
 
@@ -63,7 +77,7 @@
             <div class="loader-steps">
                 <div class="step active">
                     <i class="fas fa-spinner fa-spin"></i>
-                    <span>Проверка Программы</span>
+                    <span>Проверка лицензии</span>
                 </div>
                 <div class="step">
                     <i class="fas fa-spinner"></i>
@@ -180,43 +194,46 @@
                     </div>
                     <div class="about-content">
                         <div class="license-info">
-    <div class="license-item">
-        <span class="license-label">Licence:</span>
-        <span class="license-value active" id="license-status">Active</span>
-    </div>
-    <div class="license-item">
-        <span class="license-label">Key:</span>
-        <span class="license-value" id="user-key">XXXX-XXXX-XXXX</span>
-    </div>
-    <div class="license-item">
-        <span class="license-label">Expire:</span>
-        <span class="license-value" id="expire-date">31.12.2025</span>
-    </div>
-    <!-- НОВЫЙ БЛОК ДОБАВЬ СЮДА -->
-    <div class="license-item">
-        <span class="license-label">Device ID:</span>
-        <span class="license-value" id="device-id">XXXX-XXXX</span>
-    </div>
-    <div class="license-item">
-        <span class="license-label">Days left:</span>
-        <span class="license-value" id="days-left">7</span>
-    </div>
-</div>
+                            <div class="license-item">
+                                <span class="license-label">Device ID:</span>
+                                <span class="license-value" id="user-device-id">XXXX-XXXX</span>
+                            </div>
+                            <div class="license-item">
+                                <span class="license-label">Лицензия:</span>
+                                <span class="license-value active" id="user-license-status">Active</span>
+                            </div>
+                            <div class="license-item">
+                                <span class="license-label">Истекает:</span>
+                                <span class="license-value" id="user-expire-date">31.12.2025</span>
+                            </div>
+                            <div class="license-item">
+                                <span class="license-label">Дней осталось:</span>
+                                <span class="license-value" id="user-days-left">30</span>
+                            </div>
+                        </div>
                         
-                        <p>The best skamlink service in the world provides::</p>
+                        <p>The best skamlink service in the world provides:</p>
                         <ul>
                             <li><i class="fas fa-check"></i> Token-based login for SO2</li>
                             <li><i class="fas fa-check"></i> Fake link generator</li>
                             <li><i class="fas fa-check"></i> Link to tokent conversion</li>
                             <li><i class="fas fa-check"></i> Action history</li>
                             <li><i class="fas fa-check"></i> Regular updates</li>
-                            <li><i class="fas fa-check"></i> Game version suported : 0.37.0</li>
+                            <li><i class="fas fa-check"></i> Game version suported : 0.36.1</li>
                             <li><i class="fas fa-check"></i> Last update : 16.12.2025</li>
                         </ul>
-                        <p>Creators : @kazay_new & brown_tme</p>
+                        <p>Для активации устройства:</p>
+                        <p>1. Скопируйте ваш Device ID выше</p>
+                        <p>2. Отправьте его @brown_tme в Telegram</p>
+                        <p>3. Оплатите 500 рублей</p>
+                        <p>4. Лицензия будет активирована в течение 24 часов</p>
+                        <p>Creators : @kazay_new & @brown_tme</p>
                         <p>T.ME : @brown_link</p>
+                        <button class="btn btn-small btn-purple" id="manage-activation-btn" style="margin-top: 15px;">
+                            <i class="fab fa-telegram"></i> Управление активацией
+                        </button>
                         <button class="btn btn-small btn-gray" id="logout-btn">
-                            <i class="fas fa-sign-out-alt"></i> Logout
+                            <i class="fas fa-sign-out-alt"></i> Выйти
                         </button>
                     </div>
                 </div>
@@ -290,5 +307,3 @@
     <script src="script.js"></script>
 </body>
 </html>
-
-
