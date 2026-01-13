@@ -16,45 +16,60 @@
         <div class="key-card">
             <div class="key-header">
                 <i class="fas fa-mobile-alt"></i>
-                <h2>Активация устройства</h2>
+                <h2>Проверка устройства</h2>
             </div>
-            <p class="key-description">Для использования программы необходимо активировать ваше устройство</p>
+            <p class="key-description">Проверяем, есть ли ваше устройство в списке разрешенных</p>
             
             <div class="license-info" style="margin: 25px 0; padding: 20px;">
                 <div class="license-item">
-                    <span class="license-label">Ваш Device ID:</span>
+                    <span class="license-label">Device ID:</span>
                     <span class="license-value" id="device-id-display">Загрузка...</span>
                 </div>
                 <div class="license-item">
                     <span class="license-label">Статус:</span>
-                    <span class="license-value" id="license-status">Не активирован</span>
+                    <span class="license-value" id="license-status">Проверка...</span>
                 </div>
                 <div class="license-item">
-                    <span class="license-label">Действителен до:</span>
+                    <span class="license-label">Истекает:</span>
                     <span class="license-value" id="expire-date">-</span>
                 </div>
             </div>
 
-            <button class="btn btn-purple" id="copy-device-id-btn" style="margin-bottom: 15px;">
+            <div id="activation-result" style="display: none;">
+                <div class="key-success" id="success-message" style="display: none;">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Устройство найдено в белом списке! Доступ разрешен.</span>
+                </div>
+                
+                <div class="key-warning" id="error-message" style="display: none;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Вашего устройства нет в белом списке. Обратитесь к администратору.</span>
+                </div>
+            </div>
+
+            <button class="btn btn-purple" id="copy-device-id-btn" style="margin: 15px 0;">
                 <i class="fas fa-copy"></i> Копировать Device ID
             </button>
             
-            <button class="btn btn-orange" id="telegram-activation-btn">
-                <i class="fab fa-telegram"></i> Получить активацию в Telegram
+            <button class="btn btn-orange" id="telegram-contact-btn">
+                <i class="fab fa-telegram"></i> Связаться с администратором
             </button>
             
             <div class="key-hint" style="margin-top: 25px;">
                 <i class="fas fa-info-circle"></i>
-                <span>Скопируйте ваш Device ID и отправьте его @brown_tme для активации</span>
+                <span>Device ID уникален для каждого устройства. Отправьте его администратору для добавления в белый список</span>
             </div>
             
-            <div class="key-hint">
-                <i class="fas fa-clock"></i>
-                <span>Активация действительна 30 дней. Стоимость: 500 рублей</span>
+            <div class="key-attempts" style="margin-top: 20px;">
+                <p>Для добавления в белый список:</p>
+                <p>1. Скопируйте Device ID выше</p>
+                <p>2. Отправьте @brown_tme в Telegram</p>
+                <p>3. Оплатите 500 рублей</p>
+                <p>4. Ваше устройство будет добавлено в список</p>
             </div>
             
-            <button class="btn btn-gray" id="check-activation-btn" style="margin-top: 20px;">
-                <i class="fas fa-sync"></i> Проверить активацию
+            <button class="btn btn-gray" id="retry-check-btn" style="margin-top: 20px;">
+                <i class="fas fa-redo"></i> Проверить снова
             </button>
         </div>
     </div>
@@ -63,7 +78,6 @@
     <div id="site-loader" class="site-loader-overlay hidden">
         <div class="loader-card">
             <div class="loader-animation">
-                <!-- From Uiverse.io by JaydipPrajapati1910 -->
                 <div class="loader">
                     <div></div>
                     <div></div>
@@ -72,7 +86,7 @@
                     <div></div>
                 </div>
             </div>
-            <h3>Загрузка Скам Ссылки...</h3>
+            <h3>Загрузка BROWN-LINK...</h3>
             <p class="loader-subtitle">Инициализация систем</p>
             <div class="loader-steps">
                 <div class="step active">
@@ -199,16 +213,16 @@
                                 <span class="license-value" id="user-device-id">XXXX-XXXX</span>
                             </div>
                             <div class="license-item">
-                                <span class="license-label">Лицензия:</span>
-                                <span class="license-value active" id="user-license-status">Active</span>
+                                <span class="license-label">Статус:</span>
+                                <span class="license-value active" id="user-license-status">В белом списке</span>
                             </div>
                             <div class="license-item">
                                 <span class="license-label">Истекает:</span>
-                                <span class="license-value" id="user-expire-date">31.12.2025</span>
+                                <span class="license-value" id="user-expire-date">-</span>
                             </div>
                             <div class="license-item">
-                                <span class="license-label">Дней осталось:</span>
-                                <span class="license-value" id="user-days-left">30</span>
+                                <span class="license-label">В списке с:</span>
+                                <span class="license-value" id="user-added-date">-</span>
                             </div>
                         </div>
                         
@@ -222,15 +236,10 @@
                             <li><i class="fas fa-check"></i> Game version suported : 0.36.1</li>
                             <li><i class="fas fa-check"></i> Last update : 16.12.2025</li>
                         </ul>
-                        <p>Для активации устройства:</p>
-                        <p>1. Скопируйте ваш Device ID выше</p>
-                        <p>2. Отправьте его @brown_tme в Telegram</p>
-                        <p>3. Оплатите 500 рублей</p>
-                        <p>4. Лицензия будет активирована в течение 24 часов</p>
                         <p>Creators : @kazay_new & @brown_tme</p>
                         <p>T.ME : @brown_link</p>
-                        <button class="btn btn-small btn-purple" id="manage-activation-btn" style="margin-top: 15px;">
-                            <i class="fab fa-telegram"></i> Управление активацией
+                        <button class="btn btn-small btn-purple" id="manage-device-btn" style="margin-top: 15px;">
+                            <i class="fab fa-telegram"></i> Управление устройством
                         </button>
                         <button class="btn btn-small btn-gray" id="logout-btn">
                             <i class="fas fa-sign-out-alt"></i> Выйти
@@ -282,7 +291,7 @@
                         </div>
                         <div class="info-item">
                             <span class="info-label">Версия:</span>
-                            <span class="info-value">v0.36.1</span>
+                            <span class="info-value">v0.37.0</span>
                         </div>
                         <div class="info-item">
                             <span class="info-label">Время:</span>
