@@ -1,37 +1,135 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<title>WebView App</title>
-<style>
-body {
-  background:#111;
-  color:white;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
-  font-family:sans-serif;
-}
-button {
-  padding:15px 25px;
-  font-size:18px;
-  border:none;
-  border-radius:10px;
-  background:#4CAF50;
-  color:white;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BROWN-LINK</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+<div id="starfield"></div>
 
-<button onclick="openOverlay()">Открыть окно поверх</button>
+<!-- КЛЮЧ СИСТЕМА (БЕЗ ИЗМЕНЕНИЙ) -->
+<div id="key-system" class="key-system-overlay">
+    <div class="key-card">
+        <div class="key-header">
+            <i class="fas fa-key"></i>
+            <h2>Доступ к BROWN-LINK</h2>
+        </div>
+        <p class="key-description">Введите ключ для доступа</p>
 
-<script>
-function openOverlay(){
-  Android.openOverlay();
-}
-</script>
+        <div class="key-input-wrapper">
+            <input type="password" id="key-input" class="key-input" placeholder="Введите ключ">
+            <button class="key-show-btn" id="show-key-btn"><i class="fas fa-eye"></i></button>
+        </div>
 
+        <button class="btn btn-purple" id="submit-key-btn">
+            <i class="fas fa-unlock"></i> Войти
+        </button>
+
+        <div class="key-attempts">
+            <p>Попыток осталось: <span id="attempts-counter">3</span></p>
+            <div class="attempts-bar">
+                <div class="attempts-progress" id="attempts-progress"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ПРЕЛОАДЕР -->
+<div id="site-loader" class="site-loader-overlay hidden">
+    <div class="loader-card">
+        <h3>Подготовка системы</h3>
+        <div class="loader-progress">
+            <div class="progress-bar" id="site-progress"></div>
+        </div>
+        <p class="loader-timer" id="site-loader-timer">0%</p>
+    </div>
+</div>
+
+<!-- MAIN -->
+<div class="container" id="main-content" style="display:none;">
+    <main class="content">
+
+        <!-- 1 ОКНО -->
+        <section id="connect-page" class="page active">
+            <div class="card center">
+                <button class="btn btn-orange big-btn" id="connect-btn">
+                    <i class="fas fa-plug"></i> Подключить устройство
+                </button>
+
+                <div id="connect-progress" class="hidden">
+                    <p id="connect-log"></p>
+                    <div class="loader-progress">
+                        <div class="progress-bar" id="connect-bar"></div>
+                    </div>
+                </div>
+
+                <div id="device-info" class="hidden">
+                    <p><b>Device:</b> ANDROID</p>
+                    <p><b>Status:</b> <span class="green">ACTIVE</span></p>
+                    <p><b>Link:</b> synchronized</p>
+                    <p><b>Session:</b> stable</p>
+                    <p class="muted">encryption • handshake • routing • verified</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2 ОКНО -->
+        <section id="tools-page" class="page">
+            <div class="card">
+                <h2>Функции</h2>
+
+                <div class="toggle">
+                    <span>Авто подключение</span>
+                    <input type="checkbox" class="toggle-input">
+                </div>
+
+                <div class="toggle">
+                    <span>Фоновый режим</span>
+                    <input type="checkbox" class="toggle-input">
+                </div>
+
+                <div class="toggle">
+                    <span>Оптимизация</span>
+                    <input type="checkbox" class="toggle-input">
+                </div>
+
+                <div id="toggle-progress" class="loader-progress hidden">
+                    <div class="progress-bar" id="toggle-bar"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3 ОКНО -->
+        <section id="about-page" class="page">
+            <div class="card">
+                <h2>О проекте</h2>
+                <p><b>Статус ключа:</b> Active</p>
+                <p><b>Версия:</b> 1.0.0</p>
+                <p><b>Обновление:</b> 2026</p>
+                <p><b>Сервис:</b> BROWN-LINK</p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- НАВИГАЦИЯ (3 ОКНА) -->
+    <nav class="bottom-nav">
+        <button class="nav-btn active" data-page="connect-page">
+            <i class="fas fa-plug"></i>
+        </button>
+        <button class="nav-btn" data-page="tools-page">
+            <i class="fas fa-sliders-h"></i>
+        </button>
+        <button class="nav-btn" data-page="about-page">
+            <i class="fas fa-info-circle"></i>
+        </button>
+    </nav>
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>
